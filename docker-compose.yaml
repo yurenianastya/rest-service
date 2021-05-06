@@ -1,0 +1,31 @@
+version: "3.6"
+services:
+  cassandra:
+    restart: always
+    container_name: cassandra
+    image: cassandra
+    volumes:
+      - ./cassandra-data:/var/lib/cassandra
+    ports:
+      - "9042:9042"
+      - "9160:9160"
+      - "7199:7199"
+      - "7001:7001"
+      - "7000:7000"
+    environment:
+      - CASSANDRA_START_RPC=true
+  go-app:
+    restart: always
+    container_name: rest-service
+    build: .
+    links:
+      - cassandra
+    depends_on:
+      - cassandra
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+volumes:
+  db-data:
+    driver: local
