@@ -11,20 +11,23 @@ import (
 	"github.com/joho/godotenv"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
+	"google.golang.org/grpc"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"rest-service/api"
 	_ "rest-service/docs"
 )
 
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
-	myRouter.HandleFunc("/", homePage)
-	myRouter.HandleFunc("/songs", getAllSongs)
-	myRouter.HandleFunc("/song", updateSong).Methods("PUT")
-	myRouter.HandleFunc("/song", createNewSong).Methods("POST")
-	myRouter.HandleFunc("/song/{id}", deleteSong).Methods("DELETE")
-	myRouter.HandleFunc("/song/{id}", getSong)
+	myRouter.HandleFunc("/", api.homePage)
+	myRouter.HandleFunc("/songs", api.getAllSongs)
+	myRouter.HandleFunc("/song", api.updateSong).Methods("PUT")
+	myRouter.HandleFunc("/song", api.createNewSong).Methods("POST")
+	myRouter.HandleFunc("/song/{id}", api.deleteSong).Methods("DELETE")
+	myRouter.HandleFunc("/song/{id}", api.getSong)
 	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
 
@@ -43,5 +46,15 @@ func main() {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	go r.Run()
 	fmt.Println("Rest API v2.0 - Mux Routers")
-	handleRequests()
+	go handleRequests()
+	//starting grpc server
+	listen, err := net.Listen("tcp", ":9000")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	grpcServer := grpc.NewServer()
+	fmt.Println("gRPC Server initialized")
+	if err := grpcServer.Serve(listen); err != nil {
+		log.Fatalf("failed to serve: %s", err)
+	}
 }
