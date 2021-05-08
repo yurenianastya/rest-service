@@ -1,4 +1,4 @@
-package main
+package _type
 
 //Song Json request payload is as follows,
 //{
